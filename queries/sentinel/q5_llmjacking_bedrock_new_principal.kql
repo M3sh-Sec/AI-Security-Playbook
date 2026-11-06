@@ -1,0 +1,16 @@
+// Q5. LLMjacking: new principal or region calling Bedrock
+// Playbook mapping: D16 / H5 / RB9 (see PLAYBOOK.md)
+// Rename indexes, sourcetypes, tables and fields to match your environment, and test before production use.
+let lookback = 30d;
+let recent = 1d;
+let bedrockEvents = dynamic(["InvokeModel","InvokeModelWithResponseStream","Converse","ConverseStream","ListFoundationModels","GetFoundationModelAvailability","GetModelInvocationLoggingConfiguration","PutUseCaseForModelAccess"]);
+let baseline = AWSCloudTrail
+    | where TimeGenerated between (ago(lookback) .. ago(recent))
+    | where EventSource == "bedrock.amazonaws.com"
+    | distinct UserIdentityArn, AWSRegion;
+AWSCloudTrail
+| where TimeGenerated > ago(recent)
+| where EventSource == "bedrock.amazonaws.com" and EventName in (bedrockEvents)
+| join kind=leftanti baseline on UserIdentityArn, AWSRegion
+| summarize Calls = count(), Events = make_set(EventName), IPs = make_set(SourceIpAddress) by UserIdentityArn, AWSRegion
+| order by Calls desc

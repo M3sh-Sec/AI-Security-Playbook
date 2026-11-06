@@ -1,0 +1,10 @@
+``` Q3. Exfiltration through links in output
+Playbook mapping: D8 / H3 / RB2 (see PLAYBOOK.md)
+Rename indexes, sourcetypes, tables and fields to match your environment, and test before production use. ```
+index=ai sourcetype=ai:response earliest=-7d
+| rex field=response_text max_match=20 "(?<url>https?://[^\s\)\"'<>]+)"
+| mvexpand url
+| rex field=url "https?://(?<domain>[^/:?]+)"
+| lookup approved_domains.csv domain OUTPUT approved
+| where isnull(approved) AND len(url) > 100
+| stats count values(url) as urls by user_id conversation_id domain

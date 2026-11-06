@@ -1,0 +1,12 @@
+``` Q2. Injection in content followed by a tool call
+Playbook mapping: D2 / H1 / RB2 (see PLAYBOOK.md)
+Rename indexes, sourcetypes, tables and fields to match your environment, and test before production use. ```
+index=ai sourcetype=ai:guardrail direction IN ("retrieval","tool_return") score>=0.5
+| rename _time as inj_time
+| fields conversation_id inj_time classifier score source_doc
+| join type=inner max=0 conversation_id
+    [ search index=ai sourcetype=ai:tool_call
+      | rename _time as call_time
+      | fields conversation_id call_time tool_name arguments ]
+| where call_time > inj_time
+| table conversation_id source_doc score inj_time call_time tool_name arguments

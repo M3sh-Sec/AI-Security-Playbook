@@ -1,0 +1,8 @@
+``` Q1. Off-profile and unapproved tool calls
+Playbook mapping: D9 / H2 / RB7 (see PLAYBOOK.md)
+Rename indexes, sourcetypes, tables and fields to match your environment, and test before production use. ```
+index=ai sourcetype=ai:tool_call earliest=-30d
+| lookup agent_tool_profile.csv agent_id tool_name OUTPUT allowed
+| where isnull(allowed) OR (state_changing="true" AND isnull(approver))
+| stats count values(tool_name) as tools values(arguments) as args by agent_id user_id conversation_id
+| sort - count

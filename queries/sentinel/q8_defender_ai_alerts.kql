@@ -1,0 +1,9 @@
+// Q8. Platform AI alerts in one view
+// Playbook mapping: Platform alerts / Part 3 / Part 7 (see PLAYBOOK.md)
+// Rename indexes, sourcetypes, tables and fields to match your environment, and test before production use.
+SecurityAlert
+| where TimeGenerated > ago(30d)
+| where ProductName has "Defender for Cloud" or ProviderName has "Azure Security Center"
+| where AlertType startswith "AI."
+| summarize Alerts = count(), Types = make_set(AlertType), Resources = make_set(ResourceId) by bin(TimeGenerated, 1d), AlertSeverity
+| order by TimeGenerated desc

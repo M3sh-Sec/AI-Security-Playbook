@@ -1,0 +1,8 @@
+// Q4. Invisible Unicode in prompts or retrieved text
+// Playbook mapping: D3 / H4 / RB2 (see PLAYBOOK.md)
+// Rename indexes, sourcetypes, tables and fields to match your environment, and test before production use.
+union AIPrompt_CL, AIRetrieval_CL
+| where TimeGenerated > ago(30d)
+| extend body = coalesce(prompt_text, chunk_text_inserted)
+| where body matches regex @"[\x{E0000}-\x{E007F}\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2060}-\x{2064}]"
+| project TimeGenerated, conversation_id, user_id, doc_id, last_editor, body

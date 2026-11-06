@@ -1,0 +1,9 @@
+``` Q7. Extraction and cost outliers
+Playbook mapping: D18 / H7 / RB10 (see PLAYBOOK.md)
+Rename indexes, sourcetypes, tables and fields to match your environment, and test before production use. ```
+index=ai sourcetype=ai:usage earliest=-14d
+| bin _time span=1h
+| stats sum(tokens) as tokens count as requests dc(prompt_hash) as unique_prompts by _time api_key_id
+| eventstats median(tokens) as med_tokens by api_key_id
+| where tokens > 3*med_tokens AND requests > 500
+| eval prompt_diversity = round(unique_prompts/requests, 2)
